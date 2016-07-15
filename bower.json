@@ -1,0 +1,27 @@
+{
+  "name": "scheduleme",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Stephan Williams <stephanwilliams.93@gmail.com>"
+  ],
+  "license": "ISC",
+  "moduleType": [],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "angular": "^1.5.0",
+    "angular-local-storage": "^0.2.5",
+    "angular-bootstrap": "^1.2.1",
+    "angular-route": "^1.5.0",
+    "angularjs-slider": "^2.10.2"
+  }
+}

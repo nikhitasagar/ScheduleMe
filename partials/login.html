@@ -1,0 +1,32 @@
+<div class="container">
+    <div class="row">
+        <div class="col col-md-6">
+            <div class="input-group">
+                <div class="input-group">
+                    <input type="text" 
+                           class="form-control" 
+                           placeholder="Username"
+                           ng-model="username" />
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" 
+                                type="button"
+                                ng-click="login()"
+                                ng-disable="!username">
+                            Login
+                        </button>
+                    </span>
+                </div> 
+            </div> <!-- /input-group -->
+        </div>
+    </div> <br />
+    <div class="row">
+        <div class="col col-md-6">
+            <div class="well">
+                <p>
+                    This page is bypassed if you login using CAS. It's here
+                    to make development easier.
+                </p>
+            </div>
+        </div>
+     </div>
+</div>

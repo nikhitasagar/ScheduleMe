@@ -1,0 +1,223 @@
+<div class="container">
+    <div class="row"
+         ng-hide="!savedScheduleData || savedScheduleData.length === 0">
+        <div class="col col-md-7">
+            <nav>
+                <ul class="pagination">
+                    <li>
+                        <a href="javascript:void(0)" 
+                           aria-label="Previous"
+                           ng-click="getSavedSchedule('prev')">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li ng-repeat="schedule in savedScheduleData"
+                        ng-class="[{'active': savedScheduleCount === $index}]">
+                        <a href="javascript:void(0)"
+                           ng-click="getSavedSchedule($index)">
+                           {{$index + 1}}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" 
+                           aria-label="Next"
+                           ng-click="getSavedSchedule('next')">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="col col-md-5">
+            <br />
+            <div class="pull-right">
+                <a class="btn btn-primary" 
+                   href="javascript:void(0)"
+                   class="dropdown-toggle"
+                   data-toggle="dropdown"
+                   role="button"
+                   aria-haspopup="true"
+                   aria-expanded="false"
+                   ng-hide="!savedScheduleData || savedScheduleData.length === 0">
+                   Actions
+                   <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a href="javascript:void(0)"
+                           ng-click="prepareScheduleForUpdate()">
+                            Update Schedule
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)"
+                           ng-click="deleteSchedule()">
+                            Delete Schedule
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row"
+         ng-hide="savedScheduleData && savedScheduleData.length > 0">
+         <div class="col col-md-12">
+            <div class="jumbotron">
+                <h1>You currently have no schedules.</h1>
+                <p>
+                    Click below to get started:
+                </p>
+                <a class="btn btn-lg btn-primary"
+                   type="button"
+                   href="/#/workspace">Build Schedule</a>
+            </div>
+         </div>
+    </div>
+    <br />
+    <div class="row"
+         ng-hide="!savedScheduleData || savedScheduleData.length === 0">
+        <div class="col col-md-8">
+            <table id="class-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Mon</th>
+                        <th>Tues</th>
+                        <th>Wed</th>
+                        <th>Thurs</th>
+                        <th>Fri</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="class-table-cell"
+                        ng-repeat="timeSlot in savedTimeSlots">
+                        <td><strong>{{formatTime(timeSlot.time)}}</strong></td>
+                        <td class="schedule-table-cell" ng-repeat="weekDay in weekDays" watch-height>
+                            <a href="javascript:void(0)"
+                               class="btn btn-sm btn-default"
+                               type="button"
+                               data-target="#accordion-for-{{class.department}}-{{class.class_number}}"
+                               ng-repeat="class in timeSlot.classes | orderBy: '+start_time'"
+                               hide on-condition="{{class.day_of_week !== weekDay}}">
+                                <strong>{{class.department}} {{class.class_number}}</strong>
+                                <br />
+                                <small>
+                                    {{formatTime(class.start_time)}} - {{formatTime(class.end_time)}}
+                                </small>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col col-md-4">
+            <div class="panel-group">
+                <div class="panel panel-default class-accordion"
+                     id="accordion-for-{{class.department}}-{{class.class_number}}"
+                     ng-repeat="class in savedScheduleData[savedScheduleCount].grouped">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse"
+                               href="javascript:void(0)">
+                                {{class.department}} {{class.class_number}} {{class.class_name}}
+                            </a>
+                        </h4>
+                    </div>
+                    <div class="panel-collapse collapse">
+                        <div class="panel-body">
+                        <small>
+                            <div class="row">
+                                <div class="col col-md-4">
+                                    <label>Section:</label> {{class.section_name}}
+                                    <label>CRN:</label> {{class.crn}}
+                                </div>
+                                <div class="col col-md-8">
+                                    <table>
+                                        <tbody>
+                                            <tr ng-repeat="time in class.times">
+                                                <td>
+                                                    <label>
+                                                        {{formatTime(time.start_time)}} - 
+                                                        {{formatTime(time.end_time)}}&nbsp;&nbsp;
+                                                    </label>
+                                                </td>
+                                                <td ng-repeat="weekDay in weekDays">
+                                                    <div ng-class="[
+                                                            {'square black':
+                                                                class.days_of_week.indexOf('{{weekDay}}') !== -1
+                                                                && time.in.indexOf('{{weekDay}}') !== -1},
+                                                            {'square white':
+                                                                time.in.indexOf('{{weekDay}}') === -1}
+                                                         ]">
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <label>Prof:</label> {{class | toProfessorName}}<br />
+                                    <label>GPA:</label> {{class | toProfessorGPA}}<br />
+                                    <label>Loc:</label> {{class.location}}
+                                </div>
+                            </div>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).on("click", ".class-table-cell a", function() {
+        var thisDataTarget = $(this).attr('data-target');
+        $('.class-table-cell a').each(function() {
+            var target = $(this).attr('data-target').trim(),
+            body = $(target).find('.panel-collapse');
+            if (body.hasClass('in')) {
+                $(target).removeClass('panel-primary');
+                body.removeClass('in');
+            }
+            if ($(this).attr('data-target') === thisDataTarget) {
+                $(this).removeClass('btn-default').addClass('btn-primary');
+            } else {
+                $(this).addClass('btn-default').removeClass('btn-primary');
+            }
+        });
+        var target = $(this).attr('data-target').trim(),
+            body = $(target).find('.panel-collapse');
+        if (body.hasClass('in')) {
+            $(target).removeClass('panel-primary');
+            body.removeClass('in');
+        } else {
+            $(target).addClass('panel-primary');
+            body.addClass('in');
+        }
+    }).on("click", ".class-accordion a", function() {
+        var thisObjectID = '#' + $(this).closest('.panel').attr('id');
+        $('.class-table-cell a').each(function() {
+            if ($(this).attr('data-target') === thisObjectID) {
+                $(this).removeClass('btn-default').addClass('btn-primary');
+            } else {
+                $(this).addClass('btn-default').removeClass('btn-primary');
+            }
+        });
+        $('.class-accordion a').each(function() {
+            var panel = $(this).closest('.class-accordion'),
+            panelBody = panel.find('.panel-collapse');
+            if (panel.hasClass('panel-primary')) {
+                panel.removeClass('panel-primary');
+                panelBody.removeClass('in');
+            }
+        });
+        var panel = $(this).closest('.class-accordion'),
+            panelBody = panel.find('.panel-collapse');
+        if (panel.hasClass('panel-primary')) {
+            panel.removeClass('panel-primary');
+            panelBody.removeClass('in');
+        } else {
+            panel.addClass('panel-primary');
+            panelBody.addClass('in');
+        }
+    });
+</script>

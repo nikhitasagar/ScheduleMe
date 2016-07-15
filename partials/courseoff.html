@@ -1,0 +1,202 @@
+<div class="container">
+    <div class="row">
+        <div class="col col-md-12">
+            <h1>CourseOff Script</h1>
+
+            <div class="alert alert-info">
+                Scrape data takes about a minute or two to run. Even after it has run,
+                it takes a while for sqlite to insert all the records into the
+                database. So, clicking on buttons like "Select all semesters"
+                will only work after all the initial insertions are complete.
+                <br /><br />
+                Manually delete the DB and click 'Scrape data' to get most
+                up-to-date data.
+                <br /><br />
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <select id="scrape-data-term"
+                                        class="form-control">
+                                    <option data-term="201601">Spring 2016</option>
+                                    <option data-term="201605">Summer 2016</option>
+                                    <option data-term="201608">Fall 2016</option>
+                                </select>
+                            </td>
+                            <td>
+                                <a class="btn btn-primary" id="scrape-data-btn" href="javascript:void(0)">Scrape data</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>Add/Remove Section to/from Schedule</h3>
+            <div class="row">
+                <div class="col col-md-6">
+                    <select class="form-control" 
+                            ng-model="form.method"
+                            ng-init="form.method = 'Add'">
+                        <option>Add</option>
+                        <option>Remove</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col col-md-6">
+                    <label>Schedule ID:</label> <input class="form-control" ng-model="form.schedule_id" />
+                </div>
+                <div class="col col-md-6">
+                    <label>Section ID:</label> <input class="form-control" ng-model="form.section_id" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col col-md-6">
+                    <button class="btn btn-default" 
+                            ng-if="form.method === 'Add'"
+                            ng-click="addSectionToSchedule(form.section_id, form.schedule_id)">
+                        Add section
+                    </button>
+                    <button class="btn btn-default" 
+                            ng-if="form.method === 'Remove'"
+                            ng-click="removeSectionFromSchedule(form.section_id, form.schedule_id)">
+                        Remove section
+                    </button>   
+                </div>
+            </div>
+
+            <h3>Pre-defined queries</h3>
+            <div class="btn-group">
+                <a class="btn btn-default" id="select-semester-btn"
+                   href="javascript:void(0)" data-query="select * from semester;">
+                    Select all semesters
+                </a>
+                <a class="btn btn-default" id="select-class-btn"
+                    href="javascript:void(0)" data-query="select * from class order by semester_id;">
+                    Select all classes
+                </a>
+                <a class="btn btn-default" id="select-section-btn"
+                    href="javascript:void(0)" data-query="select * from section order by class_id;">
+                    Select all sections
+                </a>
+                <a class="btn btn-default" id="select-timeslot-btn"
+                    href="javascript:void(0)" data-query="select * from timeslot order by section_id;">
+                    Select all timeslots
+                </a>
+                <a class="btn btn-default" id="select-professor-btn"
+                    href="javascript:void(0)" data-query="select * from professor;">
+                    Select all timeslots
+                </a>
+            </div>
+
+            <h3>Custom query</h3>
+            <textarea class="form-control" id="custom-query-textarea">
+            </textarea>
+            <br />
+            <button class="btn btn-default" id="custom-select-btn">Run</button>
+
+            <h3>Results</h3>
+            <table id="table" class="table">
+                <thead>
+                    <tr></tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        var definedSelectBtns = [
+            $('#select-semester-btn'), $('#select-class-btn'),
+            $('#select-section-btn'), $('#select-timeslot-btn'), 
+            $('#select-professor-btn')
+        ];
+        var allBtns = [
+            $('#select-semester-btn'), $('#select-class-btn'),
+            $('#select-section-btn'), $('#select-timeslot-btn'), 
+            $('#select-professor-btn'), $('#custom-select-btn')
+        ];
+
+        $('#scrape-data-btn').click(function() {
+            var term = $('#scrape-data-term option:selected').attr('data-term').trim();
+            if (!term) return;
+            $.each(allBtns, function(i, btn) {
+               btn.attr('disabled', true);
+            });
+            $(this).attr('disabled', true);
+            $.ajax({
+                url: '/init/' + term 
+            }).success(function(data) {
+                alert('Finished scraping data.');
+            }).done(function(data) {
+                $.each(allBtns, function(i, btn) {
+                    btn.attr('disabled', false);
+                });
+                $(this).attr('enabled', true);
+            });
+        });
+
+        $.each(definedSelectBtns, function(i, btn) {
+            $(btn).click(function() {
+                $.each(allBtns, function(i, btn) {
+                   btn.attr('disabled', true);
+                });
+                var query = $(this).attr('data-query');
+                $.ajax({
+                    url: '/select?query=' + query,
+                }).success(function(data) {
+                    var thead = $('#table').find('thead').find('tr');
+                    var tbody = $('#table').find('tbody');
+                    // Clear previous data
+                    thead.find('th').remove();
+                    tbody.find('td').remove();
+                    $.each(data[0], function(name, value) {
+                        thead.append('<th>' + name + '</th>');
+                    });
+                    $.each(data, function(i, obj) {
+                        tbody.append('<tr></tr>');
+                        $.each(obj, function(name, value) {
+                            tbody.append('<td>' + value + '</td>');
+                        });
+                    });
+                }).done(function(data) {
+                    $.each(allBtns, function(i, btn) {
+                        btn.attr('disabled', false);
+                    });
+                });
+            });
+        });
+
+        $('#custom-select-btn').click(function() {
+            var texaAreaQuery = $('#custom-query-textarea').val();
+            $.each(allBtns, function(i, btn) {
+               btn.attr('disabled', true);
+            });
+            $.ajax({
+                url: '/select?query=' + texaAreaQuery,
+            }).success(function(data) {
+                var thead = $('#table').find('thead').find('tr');
+                var tbody = $('#table').find('tbody');
+                // Clear previous data
+                thead.find('th').remove();
+                tbody.find('td').remove();
+                $.each(data[0], function(name, value) {
+                    thead.append('<th>' + name + '</th>');
+                });
+                $.each(data, function(i, obj) {
+                    tbody.append('<tr></tr>');
+                    $.each(obj, function(name, value) {
+                        tbody.append('<td>' + value + '</td>');
+                    });
+                });
+            }).done(function(data) {
+                $.each(allBtns, function(i, btn) {
+                    btn.attr('disabled', false);
+                });
+            });
+        });
+    });
+</script>

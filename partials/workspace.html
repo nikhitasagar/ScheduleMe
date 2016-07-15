@@ -1,0 +1,581 @@
+<div class="container">
+    <div class="row">
+        <div class="col col-md-5">
+            <h3>
+                <u>Classes</u>
+                <small>
+                    <a href="javascript:void(0)"
+                       class="glyphicon glyphicon-info-sign"
+                       ng-click="showInfo = !showInfo">
+                   </a>
+               </small>
+            </h3>
+            <small ng-show="showInfo === true">
+                <span class="glyphicon glyphicon-lock"></span> = mandatory |
+                <span class="glyphicon glyphicon-lock glyph-gray"></span> = optional |
+                <span class="glyphicon glyphicon-th-large"></span> = pick one from group
+            </small>
+
+            <!-- Display message when no classes/groups -->
+            <div class="panel panel-default"
+                 ng-if="(!selectedClasses || selectedClasses.length == 0) &&
+                        (!selectedGroups || selectedGroups.length == 0)">
+                <div class="panel-body">
+                    <p>
+                        You currently have no classes selected. To add a class,
+                        click on 'Add Class'. To add a group of classes that
+                        fulfill the same degree requirement, click on 'Add Group'.
+                        Classes that are grouped together are mutually exclusive:
+                        they cannot both appear in the same schedule.
+                    </p>
+                </div>
+            </div>
+
+            <!--List selected classes-->
+            <ul class="list-group">
+                <li class="list-group-item"
+                    ng-repeat="class in selectedClasses">
+                    <small>
+                        <a href="javascript:void(0)"
+                           style="margin-left: 5px"
+                           class="glyphicon glyphicon-remove no-link pull-right"
+                           ng-click="undoSelection(class, 'selectedClasses')">
+                        </a>
+                        <a  href="javascript:void(0)"
+                            ng-class="{'glyphicon glyphicon-lock no-link pull-right': class.isMandatory === true,
+                                       'glyphicon glyphicon-lock glyph-gray no-link pull-right': !class.isMandatory}"
+                            ng-click="updateClassMandatoryStatus(class, 'selectedClasses')">
+                        </a>
+                    </small>
+                    <br />
+                    <table width="90%">
+                        <tbody>
+                            <tr>
+                                <td width="75%">
+                                    <strong>{{class.department}} {{class.class_number}}:</strong> {{class.class_name}} 
+                                    <span ng-show="class.isLab === true">(Lab)</span>
+                                </td>
+                                <td width="25%">
+                                    <span class="pull-left"><strong>CRN: </strong> {{class.crn}}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </li>
+                
+                <!--List selected groups-->
+                <li class="list-group-item"
+                    ng-repeat="group in selectedGroups">
+                    <small>
+                        <a href="javascript:void(0)"
+                           style="margin-left: 5px"
+                           class="glyphicon glyphicon-remove no-link pull-right"
+                           ng-click="undoSelection(class, 'selectedGroups')">
+                        </a>
+                        <span class="glyphicon glyphicon-th-large pull-right"></span>
+                    </small>
+                    <br />
+                    <table width="90%">
+                        <tbody>
+                            <tr ng-repeat="class in group">
+                                <td width="75%">
+                                    <strong>{{class.department}} {{class.class_number}}:</strong> {{class.class_name}}
+                                </td>
+                                <td width="25%">
+                                    <span class="pull-left"><strong>CRN: </strong> {{class.crn}}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </li>
+            </ul>
+
+            <div class="btn-group">
+                <label class="btn btn-default"
+                       title="Add a class to your schedule."
+                       data-toggle="modal"
+                       data-target="#class-modal">
+                    Add Class
+                </label>
+                <label class="btn btn-default"
+                       title="Add a group of mutually exclusive classes to schedule. 
+                              Only 1 class from this group will be selected."
+                       data-toggle="modal"
+                       data-target="#group-modal">
+                    Add Group
+                </label> 
+                <label class="btn btn-primary"
+                       ng-click="generateSchedule()">
+                    Schedule Me
+                </label>
+            </div> <!--./btn-group -->
+        </div>
+
+        <div class="col col-md-2">
+        </div>
+
+        <div class="col col-md-5">
+            <h3>
+                <u>Criteria</u>
+                <small>
+                <a href="javascript:void(0)"
+                   class="glyphicon glyphicon-info-sign"
+                   ng-click="showInfo2 = !showInfo2">
+                </a>
+                </small>
+            </h3>
+            <small ng-show="showInfo2 === true">
+                <h5>
+                    Use this section to modify your preferences. Note that too many
+                    preferences might make finding the perfect schedule impossible.
+                </h5>
+            </small>
+            <div class="well" style="margin-bottom: 5px;">
+                <label>Number of Credit Hours: </label>
+                <rzslider rz-slider-model="criteria.creditsSlider.min"
+                          rz-slider-high="criteria.creditsSlider.max"
+                          rz-slider-options="criteria.creditsSlider.options">
+                </rzslider>
+            </div>
+            <uib-accordion close-others="true">
+                <uib-accordion-group heading="Time of Day" is-open="true">
+                    <div class="btn-group">
+                        <button class="btn btn-default btn-sm" uib-tooltip="Require that this criterion be true."
+                            ng-model="criteria.timeofday.priority" uib-btn-radio="'required'">
+                            <span class="glyphicon glyphicon-lock"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a high priority."
+                            ng-model="criteria.timeofday.priority" uib-btn-radio="'high'">
+                            <span class="glyphicon glyphicon-chevron-up"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a medium priority."
+                            ng-model="criteria.timeofday.priority" uib-btn-radio="'medium'">
+                            <span class="glyphicon glyphicon-minus"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a low priority."
+                            ng-model="criteria.timeofday.priority" uib-btn-radio="'low'">
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col col-md-6">
+                            <label>Earliest Class: </label><p>(start time)</p>
+                            <png-time-input ng-model="criteria.earliestTime"> 
+                            </png-time-input> 
+                       </div>
+                       <div class="col col-md-6">
+                            <label>Latest Class: </label><p>(end time)</p>
+                            <png-time-input ng-model="criteria.latestTime">
+                            </png-time-input> 
+                        </div>
+                    </div>
+                </uib-accordion-group>
+                <uib-accordion-group heading="Time Between Classes">
+                    <div class="btn-group">
+                        <button class="btn btn-default btn-sm" uib-tooltip="Require that this criterion be true."
+                            ng-model="criteria.timebetween.priority" uib-btn-radio="'required'">
+                            <span class="glyphicon glyphicon-lock"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a high priority."
+                            ng-model="criteria.timebetween.priority" uib-btn-radio="'high'">
+                            <span class="glyphicon glyphicon-chevron-up"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a medium priority."
+                            ng-model="criteria.timebetween.priority" uib-btn-radio="'medium'">
+                            <span class="glyphicon glyphicon-minus"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a low priority."
+                            ng-model="criteria.timebetween.priority" uib-btn-radio="'low'">
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </button>
+                    </div>
+                    <form name="betweenClass">
+                        <label style="margin-right: 10px;">Time (hrs):</label>
+                        <select name="between" ng-model="criteria.betweenDistance">
+                          <option>1</option>
+                          <option>1.5</option>
+                          <option>2</option>
+                          <option>2.5</option>
+                          <option>3</option>
+                        </select>
+                    </form>
+                </uib-accordion-group>
+                <uib-accordion-group heading="Distance Between Classes">
+                    <div class="btn-group">
+                        <button class="btn btn-default btn-sm" uib-tooltip="Require that this criterion be true."
+                            ng-model="criteria.distance.priority" uib-btn-radio="'required'">
+                            <span class="glyphicon glyphicon-lock"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a high priority."
+                            ng-model="criteria.distance.priority" uib-btn-radio="'high'">
+                            <span class="glyphicon glyphicon-chevron-up"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a medium priority."
+                            ng-model="criteria.distance.priority" uib-btn-radio="'medium'">
+                            <span class="glyphicon glyphicon-minus"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a low priority."
+                            ng-model="criteria.distance.priority" uib-btn-radio="'low'">
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </button>
+                    </div>
+                    <form name="distance">
+                        <label style="margin-right: 10px;">Walking Distance (mins):</label>
+                        <select name="distance" ng-model="criteria.walkingDistance">
+                          <option>5</option>
+                          <option>10</option>
+                          <option>15</option>
+                          <option>20</option>
+                      </select>
+                    </form>
+                </uib-accordion-group>
+                <uib-accordion-group heading="Excluded Times">
+                    <div>No classes on:</div>
+                    <div ng-repeat="timeslot in criteria.timeslots">
+                        <select ng-model="timeslot.day">
+                            <option value="monday">Monday</option>
+                            <option value="tuesday">Tuesday</option>
+                            <option value="wednesday">Wednesday</option>
+                            <option value="thursday">Thursday</option>
+                            <option value="friday">Friday</option>
+                        </select>
+                        <select ng-model="timeslot.type">
+                            <option value="allday">All Day</option>
+                            <option value="range">In Range</option>
+                        </select>
+                        <span ng-show="timeslot.type === 'range'">
+                            <input id="reserved-time-start-{{$index}}"
+                                   ng-model="timeslot.start"
+                                   watch-time other-time="#reserved-time-end-{{$index}}" is-start="true" />
+                            to
+                            <input id="reserved-time-end-{{$index}}"
+                                   ng-model="timeslot.end"
+                                   watch-time other-time="#reserved-time-start-{{$index}}" is-start="false" />
+                        </span>
+                    </div>
+                    <button type="button"
+                            class="btn btn-default btn-sm"
+                            style="margin-top: 5px"
+                            aria-label="Add Timeslot"
+                            ng-click="addTimeslot()">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add Time Slot
+                    </button>
+                </uib-accordion-group>
+                <uib-accordion-group heading="Average GPA">
+                    <div class="btn-group">
+                        <button class="btn btn-default btn-sm" uib-tooltip="Require that this criterion be true."
+                            ng-model="criteria.avggpa.priority" uib-btn-radio="'required'">
+                            <span class="glyphicon glyphicon-lock"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a high priority."
+                            ng-model="criteria.avggpa.priority" uib-btn-radio="'high'">
+                            <span class="glyphicon glyphicon-chevron-up"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a medium priority."
+                            ng-model="criteria.avggpa.priority" uib-btn-radio="'medium'">
+                            <span class="glyphicon glyphicon-minus"></span>
+                        </button>
+                        <button class="btn btn-default btn-sm" uib-tooltip="Give this criterion a low priority."
+                            ng-model="criteria.avggpa.priority" uib-btn-radio="'low'">
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </button>
+                    </div>
+                    Only select sections with professors with prior GPAs greater than:
+                    <rzslider rz-slider-model="criteria.gpaSlider.value"
+                              rz-slider-options="criteria.gpaSlider.options">
+                    </rzslider>
+                </uib-accordion-group>
+            </uib-accordion>
+        </div>
+    </div>
+</div>
+
+<div ng-controller="ModalController">
+    <div class="modal fade" id="class-modal" tabindex="-1" role="dialog" aria-labelledby="class-modal-label">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button"
+                            class="close"
+                            aria-label="Close"
+                            data-dismiss="modal"
+                            ng-click="resetModal()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Add Class</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col col-md-4">
+                            <label><u>Department</u></label>
+                        </div>
+                        <div class="col col-md-8">
+                            <select class="form-control"
+                                    ng-model="modalData.selectedDept"
+                                    ng-change="filterClassesByDept()">
+                                <option ng-repeat="dept in allDepartments">{{dept}}</option>
+                            </select>
+                        </div>
+                    </div> <!--./row-->
+                    <br />
+                    <div class="row">
+                        <div class="col col-md-4">
+                            <label><u>Class</u></label>
+                        </div>
+                        <div class="col col-md-8">
+                            <select class="form-control"
+                                    ng-options="c as (c.class_number + ' - ' + c.class_name) for c in modalData.filteredClasses"
+                                    ng-model="modalData.selectedClass.model"
+                                    ng-change="filterSectionsByClass()">
+                            </select>
+                        </div>
+                    </div> <!--./row-->
+
+                    <br />
+                    <div class="row">
+                        <div class="col col-md-4">
+                            <label><u>Class Section</u></label>
+                        </div>
+                        <div class="col col-md-8" style="max-height: 300px; overflow-y: auto;">
+                            <button class="btn btn-sm"
+                                    ng-class="[{'btn-primary': modalData.sectionType === 'Any'},
+                                        {'btn-default': modalData.sectionType !== 'Any'}]"
+                                    ng-click="modalData.sectionType = 'Any';
+                                        modalData.selectedSection = null;
+                                        updateSelectedSection('class');">Any</button>
+                            <button class="btn btn-sm"
+                                    ng-class="[{'btn-primary': modalData.sectionType === 'Specific'},
+                                        {'btn-default': modalData.sectionType !== 'Specific'}]"
+                                    ng-click="modalData.sectionType = 'Specific'"
+                                    ng-show="modalData.filteredSections.length > 0">Specific</button>
+                            <div class="list-group"
+                                 style="margin-top: 2px"
+                                 ng-show="modalData.sectionType === 'Specific'">
+                              <a href="javascript:void(0)" 
+                                 class="list-group-item"
+                                 ng-repeat="section in modalData.filteredSections"
+                                 ng-class="{'active': modalData.selectedSection === section}"
+                                 ng-click="modalData.selectedSection = section; updateSelectedSection('class')">
+                                <small class="list-group-item-heading">
+                                    <div>
+                                        <label>Section</label> {{section.section_name}} |
+                                        <label>CRN</label> {{section.crn}} |
+                                        <label>Credits</label> {{section.credits}}
+                                    </div>
+                                </small>
+                                <small class="list-group-item-text">
+                                    <div><label>Professor</label> {{section | toProfessorName}}</div>
+                                    <div><label>GPA</label> {{section | toProfessorGPA}}</div>
+                                    <div ng-repeat="ts in section.timeslots">
+                                        <label>{{ts.day_of_week}}</label> {{ts.start_time}} - {{ts.end_time}}
+                                    </div>
+                                    <div><label>Capacity</label> {{section.seat_remaining}}</div>
+                                </small>
+                              </a>
+                            </div>
+                        </div>
+                    </div> <!--./row-->
+                    <br />
+                    <div class="row" ng-show="modalData.filteredLabSections.length > 0">
+                        <div class="col col-md-4">
+                            <label><u>Lab Section</u></label>
+                        </div>
+                        <div class="col col-md-8" style="max-height: 300px; overflow-y: auto;">
+                            <button class="btn btn-sm"
+                                    ng-class="[{'btn-primary': modalData.labSectionType === 'Any'},
+                                        {'btn-default': modalData.labSectionType !== 'Any'}]"
+                                    ng-click="modalData.labSectionType = 'Any';
+                                        modalData.selectedLabSection = null;
+                                        updateSelectedSection('lab');">Any</button>
+                            <button class="btn btn-sm"
+                                    ng-class="[{'btn-primary': modalData.labSectionType === 'Specific'},
+                                        {'btn-default': modalData.labSectionType !== 'Specific'}]"
+                                    ng-click="modalData.labSectionType = 'Specific'">Specific</button>
+                            <div class="list-group"
+                                 style="margin-top: 2px"
+                                 ng-show="modalData.labSectionType === 'Specific'">
+                              <a href="javascript:void(0)" 
+                                 class="list-group-item"
+                                 ng-repeat="section in modalData.filteredLabSections"
+                                 ng-class="{'active': modalData.selectedLabSection === section}"
+                                 ng-click="modalData.selectedLabSection = section; updateSelectedSection('lab')">
+                                <small class="list-group-item-heading">
+                                    <div>
+                                        <label>Section</label> {{section.section_name}} |
+                                        <label>CRN</label> {{section.crn}} |
+                                        <label>Credits</label> {{section.credits}}
+                                    </div>
+                                </small>
+                                <small class="list-group-item-text">
+                                    <div><label>Professor</label> {{section | toProfessorName}}</div>
+                                    <div><label>GPA</label> {{section | toProfessorGPA}}</div>
+                                    <div ng-repeat="ts in section.timeslots">
+                                        <label>{{ts.day_of_week}}</label> {{ts.start_time}} - {{ts.end_time}}
+                                    </div>
+                                    <div><label>Capacity</label> {{section.seat_remaining}}</div>
+                                </small>
+                              </a>
+                            </div>
+                        </div>
+                    </div> <!--./row-->
+                    <br />
+                    <div class="row">
+                        <div class="col col-md-12">
+                            <label class="checkbox-inline pull-left">
+                                <input type="checkbox"
+                                       ng-model="classModalCheckbox"
+                                       ng-init="classModalCheckbox = false">
+                                Keep dialog open until 'Close' is clicked
+                            </label>
+                        </div>
+                    </div> <!--./row-->
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-default"
+                            close-modal modal-to-close="#class-modal" 
+                            function-to-call="resetModal()">
+                            Close
+                    </button>
+                    <button type="button"
+                            class="btn btn-primary"
+                            ng-disabled="!modalData.selectedDept || !modalData.selectedClass ||
+                                (modalData.sectionType === 'Specific' && !modalData.selectedSection) || 
+                                !modalData.sectionType"
+                            close-modal modal-to-close="#class-modal" 
+                            function-to-call="selectClass()"
+                            only-when-true="{{classModalCheckbox}}">
+                        Add Class
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="group-modal" tabindex="-1" role="dialog" aria-labelledby="class-modal-label">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button"
+                            class="close"
+                            aria-label="Close"
+                            data-dismiss="modal"
+                            ng-click="resetModal()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Add Group</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                      <div class="col col-md-12">
+                        <div class="well">
+                          {{modalData.groupMessage}}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col col-md-4">
+                            <label><u>Department</u></label>
+                        </div>
+                        <div class="col col-md-8">
+                            <select class="form-control"
+                                    ng-model="modalData.selectedDept"
+                                    ng-change="filterClassesByDept()">
+                                <option ng-repeat="dept in allDepartments">{{dept}}</option>
+                            </select>
+                        </div>
+                    </div> <!--./row-->
+
+                    <br />
+                    <div class="row">
+                        <div class="col col-md-4">
+                            <label><u>Class</u></label>
+                        </div>
+                        <div class="col col-md-8">
+                            <select class="form-control"
+                                    ng-options="c as (c.class_number + ' - ' + c.class_name) for c in modalData.filteredClasses"
+                                    ng-model="modalData.selectedClass.model"
+                                    ng-change="filterSectionsByClass()">
+                            </select>
+                        </div>
+                    </div> <!--./row-->
+
+                    <br />
+                    <div class="row">
+                        <div class="col col-md-4">
+                            <label><u>Class Section</u></label>
+                        </div>
+                        <div class="col col-md-8" style="max-height: 300px; overflow-y: auto;">
+                            <button class="btn btn-sm"
+                                    ng-class="[{'btn-primary': modalData.sectionType === 'Any'},
+                                        {'btn-default': modalData.sectionType !== 'Any'}]"
+                                    ng-click="modalData.sectionType = 'Any';
+                                        updateSelectedGroupSections();">Any</button>
+                            <button class="btn btn-sm"
+                                    ng-class="[{'btn-primary': modalData.sectionType === 'Specific'},
+                                        {'btn-default': modalData.sectionType !== 'Specific'}]"
+                                    ng-click="modalData.sectionType = 'Specific'"
+                                    ng-show="modalData.filteredSections.length > 0">Specific</button>
+                            <div class="list-group"
+                                 style="margin-top: 2px"
+                                 ng-show="modalData.sectionType === 'Specific'">
+                              <a href="javascript:void(0)" class="list-group-item"
+                                 ng-repeat="section in modalData.filteredSections"
+                                 ng-class="{'active': modalData.selectedSection === section}"
+                                 ng-click="modalData.selectedSection = section; updateSelectedGroupSections()">
+                                <small class="list-group-item-heading">
+                                    <div>
+                                        <label>Section</label> {{section.section_name}} |
+                                        <label>CRN</label> {{section.crn}} |
+                                        <label>Credits</label> {{section.credits}}
+                                    </div>
+                                </small>
+                                <small class="list-group-item-text">
+                                    <div><label>Professor</label> {{section | toProfessorName}}</div>
+                                    <div><label>GPA</label> {{section | toProfessorGPA}}</div>
+                                    <div ng-repeat="ts in section.timeslots">
+                                        <label>{{ts.day_of_week}}</label> {{ts.start_time}} - {{ts.end_time}}
+                                    </div>
+                                    <div><label>Capacity</label> {{section.seat_remaining}}</div>
+                                </small>
+                              </a>
+                            </div>
+                        </div>
+                    </div> <!--./row-->
+                    <br />
+                    <ul class="list-group">
+                        <li class="list-group-item" ng-repeat="class in modalData.groupClasses">
+                            <strong>{{class.department}} {{class.class_number}}:</strong> {{class.class_name}} -
+                            <small><strong>CRN: </strong> {{class.crn}}</small>
+                            <small>
+                                <a href="javascript:void(0)"
+                                   class="glyphicon glyphicon-remove no-link pull-right"
+                                   ng-click="removeSelectedGroupOption(class)">
+                               </a>
+                            </small>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-default"
+                            close-modal modal-to-close="#group-modal" function-to-call="resetModal()">
+                            Close
+                    </button>
+                    <button type="button"
+                            class="btn btn-primary"
+                            ng-disabled="modalData.groupClasses.length === 0"
+                            close-modal modal-to-close="#group-modal" function-to-call="selectGroup()">
+                        Add Group
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,92 @@
+#class-table thead th, #class-table td:nth-of-type(1) {
+    font:bold 1.2em / 2em "Century Gothic","Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+
+a.glyphicon.no-link {
+    color: black;
+    text-decoration: none
+}
+
+a.glyphicon.no-link:hover {
+    color: black;
+    text-decoration: none
+}
+
+.glyphicon.glyphicon-remove.no-link {
+    color: rgb(160, 0, 0);
+}
+
+.glyphicon.glyphicon-remove.no-link:hover {
+    color: red;
+}
+
+.square.black {
+    width: 10px;
+    height: 10px;
+    background: black;
+    border: 1px solid black;
+}
+
+.square.white {
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 1px solid black;
+}
+
+table#class-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+#class-table tr {
+    height: 30px;
+}
+
+#class-table  th, td {
+    overflow: hidden;
+    vertical-align: center;
+}
+
+#class-table a {
+    width: 100%;
+}
+
+td.schedule-table-cell {
+    height: 100%;
+}
+
+.png-time.form-control {
+    max-width: 100px;
+    padding-left: 10px;
+}
+ 
+.png-time input {
+    border: none;
+    width: 17px;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    cursor: default;
+}
+ 
+.png-time input:focus {
+    color: #000;
+}
+ 
+.png-time input.meridian {
+    width: 22px;
+    margin-left: 3px;
+}
+
+.ng-invalid{
+    border: 1px solid red;
+}
+
+.glyph-gray {
+    color: #ddd !important;
+}
+
+.glyph-gray:hover {
+    color: #aaa !important;
+}
